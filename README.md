@@ -1,13 +1,34 @@
-# Sample Hardhat Project
+# Farcaster Solidity
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+A collection of Solidity libraries for interacting with the Farcaster messages onchain.
 
-Try running some of the following tasks:
+## Overview
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+Describe how Farcaster protocol works.
+Message -> Message structure -> Protobuf encoding -> Blake3 hash -> Ed25519 signature
+Describe EVM limitations (no BLAKE3, no Ed25519, no protobuf encodings)
+
+## Gas usage
+
+Table of gas usage.
+
+The gas usage is the bottleneck. It can be solved in two ways:
+- using native precompiles
+- using ZK scalability patterns
+
+## Roadmap
+
+Efficient hashing and signature verification. 
+
+## Installing locally
+
+Install proto sol plugin
+Update proto files, yarn protoc (Docker required)
+
+## Links
+
+- Farcaster: @fastfourier.eth
+- Blake3 implementation
+- Ed25519 implementation
+- Celestia proto-sol generator
+- @farcaster/core proto files

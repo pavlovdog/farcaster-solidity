@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.9;
 
-library Blake3SolTest {
+library Blake3 {
     uint256 constant BLOCK_LEN = 64;
     uint32 constant OUT_LEN = 32;
     uint32 constant CHUNK_LEN = 1024;
@@ -234,7 +234,7 @@ library Blake3SolTest {
     }
 
 
-    function _le_bytes_get_uint32(bytes memory _bytes, uint256 _start) public pure returns (uint32) {
+    function _le_bytes_get_uint32(bytes memory _bytes, uint256 _start) internal pure returns (uint32) {
         require(_bytes.length >= _start + 4, "le_bytes_get_uint32_outOfBounds");
         uint32 tempUint;
 
@@ -456,13 +456,13 @@ library Blake3SolTest {
     }
 
     /// Construct a new `Hasher` for the regular hash function.
-    function new_hasher() public pure returns (Hasher memory) {
+    function new_hasher() internal pure returns (Hasher memory) {
         uint32[8] memory IV = _IV();
         return _new_hasher_internal(IV, 0);
     }
 
     /// Construct a new `Hasher` for the keyed hash function.
-    function new_keyed(bytes memory key) public pure returns (Hasher memory) {
+    function new_keyed(bytes memory key) internal pure returns (Hasher memory) {
         uint32[8] memory key_words;
         bytes memory key_mem = key;
         _words_from_little_endian_bytes8(key_mem, key_words);
@@ -471,7 +471,7 @@ library Blake3SolTest {
 
     // Construct a new `Hasher` for the key derivation function. The context
     // string should be hardcoded, globally unique, and application-specific
-    function new_derive_key(bytes memory context) public pure returns (Hasher memory) {
+    function new_derive_key(bytes memory context) internal pure returns (Hasher memory) {
         uint32[8] memory IV = _IV();
         Hasher memory context_hasher = _new_hasher_internal(IV, DERIVE_KEY_CONTEXT);
         update_hasher(context_hasher, context);
@@ -526,7 +526,7 @@ library Blake3SolTest {
     // Add input to the hash state. This can be called any number of times.
     function update_hasher(
         Hasher memory self, bytes memory input
-    ) public pure returns (Hasher memory) {
+    ) internal pure returns (Hasher memory) {
         uint256 input_offset = 0;
 
         while (input_offset < input.length) {
@@ -555,7 +555,7 @@ library Blake3SolTest {
         return self;
     }
 
-    function finalize(Hasher memory self) public pure returns (bytes memory) {
+    function finalize(Hasher memory self) internal pure returns (bytes memory) {
         bytes memory output = new bytes(32);
 
         _finalize_internal(self, output);
@@ -583,5 +583,26 @@ library Blake3SolTest {
             );
         }
         _root_output_bytes(output, out_slice);
+    }
+
+    function sliceBytes(bytes memory message, uint64 length) internal pure returns (bytes memory) {
+        require(length <= message.length, "Length exceeds message length");
+        
+        // Overwrite the length field of the bytes to crop the message
+        assembly {
+            mstore(message, length)
+        }
+        
+        return message;
+    }
+
+    function hash(
+        bytes memory message,
+        uint32 length
+    ) external pure returns (bytes memory) {
+        Hasher memory hasher = new_hasher();
+        update_hasher(hasher, message);
+
+        return sliceBytes(finalize(hasher), length);
     }
 }

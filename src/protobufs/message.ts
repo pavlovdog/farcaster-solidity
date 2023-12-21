@@ -1,7 +1,6 @@
 /* eslint-disable */
 import Long from "long";
 import _m0 from "protobufjs/minimal";
-import { UserNameProof } from "./username_proof";
 
 /** Type of hashing scheme used to produce a digest of MessageData */
 export enum HashScheme {
@@ -365,16 +364,20 @@ export interface MessageData {
   /** Farcaster network the message is intended for */
   network: FarcasterNetwork;
   castAddBody: CastAddBody | undefined;
-  castRemoveBody: CastRemoveBody | undefined;
+  castRemoveBody:
+    | CastRemoveBody
+    | undefined;
+  /**
+   * bool empty = 8;
+   * VerificationAddEthAddressBody verification_add_eth_address_body = 9;
+   * VerificationRemoveBody verification_remove_body = 10;
+   * bool deprecated_signer_add_body = 11;
+   * UserDataBody user_data_body = 12;
+   * bool deprecated_signer_remove_body = 13;
+   * LinkBody link_body = 14;
+   * UserNameProof username_proof_body = 15;
+   */
   reactionBody: ReactionBody | undefined;
-  empty: boolean;
-  verificationAddEthAddressBody: VerificationAddEthAddressBody | undefined;
-  verificationRemoveBody: VerificationRemoveBody | undefined;
-  deprecatedSignerAddBody: boolean;
-  userDataBody: UserDataBody | undefined;
-  deprecatedSignerRemoveBody: boolean;
-  linkBody: LinkBody | undefined;
-  usernameProofBody: UserNameProof | undefined;
 }
 
 /** Adds metadata about a user */
@@ -625,14 +628,6 @@ function createBaseMessageData(): MessageData {
     castAddBody: undefined,
     castRemoveBody: undefined,
     reactionBody: undefined,
-    empty: false,
-    verificationAddEthAddressBody: undefined,
-    verificationRemoveBody: undefined,
-    deprecatedSignerAddBody: false,
-    userDataBody: undefined,
-    deprecatedSignerRemoveBody: false,
-    linkBody: undefined,
-    usernameProofBody: undefined,
   };
 }
 
@@ -658,30 +653,6 @@ export const MessageData = {
     }
     if (message.reactionBody !== undefined) {
       ReactionBody.encode(message.reactionBody, writer.uint32(58).fork()).ldelim();
-    }
-    if (message.empty === true) {
-      writer.uint32(64).bool(message.empty);
-    }
-    if (message.verificationAddEthAddressBody !== undefined) {
-      VerificationAddEthAddressBody.encode(message.verificationAddEthAddressBody, writer.uint32(74).fork()).ldelim();
-    }
-    if (message.verificationRemoveBody !== undefined) {
-      VerificationRemoveBody.encode(message.verificationRemoveBody, writer.uint32(82).fork()).ldelim();
-    }
-    if (message.deprecatedSignerAddBody === true) {
-      writer.uint32(88).bool(message.deprecatedSignerAddBody);
-    }
-    if (message.userDataBody !== undefined) {
-      UserDataBody.encode(message.userDataBody, writer.uint32(98).fork()).ldelim();
-    }
-    if (message.deprecatedSignerRemoveBody === true) {
-      writer.uint32(104).bool(message.deprecatedSignerRemoveBody);
-    }
-    if (message.linkBody !== undefined) {
-      LinkBody.encode(message.linkBody, writer.uint32(114).fork()).ldelim();
-    }
-    if (message.usernameProofBody !== undefined) {
-      UserNameProof.encode(message.usernameProofBody, writer.uint32(122).fork()).ldelim();
     }
     return writer;
   },
@@ -742,62 +713,6 @@ export const MessageData = {
 
           message.reactionBody = ReactionBody.decode(reader, reader.uint32());
           continue;
-        case 8:
-          if (tag != 64) {
-            break;
-          }
-
-          message.empty = reader.bool();
-          continue;
-        case 9:
-          if (tag != 74) {
-            break;
-          }
-
-          message.verificationAddEthAddressBody = VerificationAddEthAddressBody.decode(reader, reader.uint32());
-          continue;
-        case 10:
-          if (tag != 82) {
-            break;
-          }
-
-          message.verificationRemoveBody = VerificationRemoveBody.decode(reader, reader.uint32());
-          continue;
-        case 11:
-          if (tag != 88) {
-            break;
-          }
-
-          message.deprecatedSignerAddBody = reader.bool();
-          continue;
-        case 12:
-          if (tag != 98) {
-            break;
-          }
-
-          message.userDataBody = UserDataBody.decode(reader, reader.uint32());
-          continue;
-        case 13:
-          if (tag != 104) {
-            break;
-          }
-
-          message.deprecatedSignerRemoveBody = reader.bool();
-          continue;
-        case 14:
-          if (tag != 114) {
-            break;
-          }
-
-          message.linkBody = LinkBody.decode(reader, reader.uint32());
-          continue;
-        case 15:
-          if (tag != 122) {
-            break;
-          }
-
-          message.usernameProofBody = UserNameProof.decode(reader, reader.uint32());
-          continue;
       }
       if ((tag & 7) == 4 || tag == 0) {
         break;
@@ -816,20 +731,6 @@ export const MessageData = {
       castAddBody: isSet(object.castAddBody) ? CastAddBody.fromJSON(object.castAddBody) : undefined,
       castRemoveBody: isSet(object.castRemoveBody) ? CastRemoveBody.fromJSON(object.castRemoveBody) : undefined,
       reactionBody: isSet(object.reactionBody) ? ReactionBody.fromJSON(object.reactionBody) : undefined,
-      empty: isSet(object.empty) ? Boolean(object.empty) : false,
-      verificationAddEthAddressBody: isSet(object.verificationAddEthAddressBody)
-        ? VerificationAddEthAddressBody.fromJSON(object.verificationAddEthAddressBody)
-        : undefined,
-      verificationRemoveBody: isSet(object.verificationRemoveBody)
-        ? VerificationRemoveBody.fromJSON(object.verificationRemoveBody)
-        : undefined,
-      deprecatedSignerAddBody: isSet(object.deprecatedSignerAddBody) ? Boolean(object.deprecatedSignerAddBody) : false,
-      userDataBody: isSet(object.userDataBody) ? UserDataBody.fromJSON(object.userDataBody) : undefined,
-      deprecatedSignerRemoveBody: isSet(object.deprecatedSignerRemoveBody)
-        ? Boolean(object.deprecatedSignerRemoveBody)
-        : false,
-      linkBody: isSet(object.linkBody) ? LinkBody.fromJSON(object.linkBody) : undefined,
-      usernameProofBody: isSet(object.usernameProofBody) ? UserNameProof.fromJSON(object.usernameProofBody) : undefined,
     };
   },
 
@@ -845,22 +746,6 @@ export const MessageData = {
       (obj.castRemoveBody = message.castRemoveBody ? CastRemoveBody.toJSON(message.castRemoveBody) : undefined);
     message.reactionBody !== undefined &&
       (obj.reactionBody = message.reactionBody ? ReactionBody.toJSON(message.reactionBody) : undefined);
-    message.empty !== undefined && (obj.empty = message.empty);
-    message.verificationAddEthAddressBody !== undefined &&
-      (obj.verificationAddEthAddressBody = message.verificationAddEthAddressBody
-        ? VerificationAddEthAddressBody.toJSON(message.verificationAddEthAddressBody)
-        : undefined);
-    message.verificationRemoveBody !== undefined && (obj.verificationRemoveBody = message.verificationRemoveBody
-      ? VerificationRemoveBody.toJSON(message.verificationRemoveBody)
-      : undefined);
-    message.deprecatedSignerAddBody !== undefined && (obj.deprecatedSignerAddBody = message.deprecatedSignerAddBody);
-    message.userDataBody !== undefined &&
-      (obj.userDataBody = message.userDataBody ? UserDataBody.toJSON(message.userDataBody) : undefined);
-    message.deprecatedSignerRemoveBody !== undefined &&
-      (obj.deprecatedSignerRemoveBody = message.deprecatedSignerRemoveBody);
-    message.linkBody !== undefined && (obj.linkBody = message.linkBody ? LinkBody.toJSON(message.linkBody) : undefined);
-    message.usernameProofBody !== undefined &&
-      (obj.usernameProofBody = message.usernameProofBody ? UserNameProof.toJSON(message.usernameProofBody) : undefined);
     return obj;
   },
 
@@ -882,26 +767,6 @@ export const MessageData = {
       : undefined;
     message.reactionBody = (object.reactionBody !== undefined && object.reactionBody !== null)
       ? ReactionBody.fromPartial(object.reactionBody)
-      : undefined;
-    message.empty = object.empty ?? false;
-    message.verificationAddEthAddressBody =
-      (object.verificationAddEthAddressBody !== undefined && object.verificationAddEthAddressBody !== null)
-        ? VerificationAddEthAddressBody.fromPartial(object.verificationAddEthAddressBody)
-        : undefined;
-    message.verificationRemoveBody =
-      (object.verificationRemoveBody !== undefined && object.verificationRemoveBody !== null)
-        ? VerificationRemoveBody.fromPartial(object.verificationRemoveBody)
-        : undefined;
-    message.deprecatedSignerAddBody = object.deprecatedSignerAddBody ?? false;
-    message.userDataBody = (object.userDataBody !== undefined && object.userDataBody !== null)
-      ? UserDataBody.fromPartial(object.userDataBody)
-      : undefined;
-    message.deprecatedSignerRemoveBody = object.deprecatedSignerRemoveBody ?? false;
-    message.linkBody = (object.linkBody !== undefined && object.linkBody !== null)
-      ? LinkBody.fromPartial(object.linkBody)
-      : undefined;
-    message.usernameProofBody = (object.usernameProofBody !== undefined && object.usernameProofBody !== null)
-      ? UserNameProof.fromPartial(object.usernameProofBody)
       : undefined;
     return message;
   },

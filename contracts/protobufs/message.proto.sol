@@ -20,7 +20,7 @@ enum ReactionType { REACTION_TYPE_NONE, REACTION_TYPE_LIKE, REACTION_TYPE_RECAST
 
 struct Message {
     MessageData data;
-    bytes hash;
+    bytes hash_;
     HashScheme hash_scheme;
     bytes signature;
     SignatureScheme signature_scheme;
@@ -219,7 +219,7 @@ library MessageCodec {
         return (true, pos);
     }
 
-    // Message.hash
+    // Message.hash_
     function decode_2(uint64 pos, bytes memory buf, Message memory instance) internal pure returns (bool, uint64) {
         bool success;
 
@@ -234,9 +234,9 @@ library MessageCodec {
             return (false, pos);
         }
 
-        instance.hash = new bytes(len);
+        instance.hash_ = new bytes(len);
         for (uint64 i = 0; i < len; i++) {
-            instance.hash[i] = buf[pos + i];
+            instance.hash_[i] = buf[pos + i];
         }
 
         pos = pos + len;
@@ -379,14 +379,6 @@ struct MessageData {
     CastAddBody cast_add_body;
     CastRemoveBody cast_remove_body;
     ReactionBody reaction_body;
-    bool empty;
-    VerificationAddEthAddressBody verification_add_eth_address_body;
-    VerificationRemoveBody verification_remove_body;
-    bool deprecated_signer_add_body;
-    UserDataBody user_data_body;
-    bool deprecated_signer_remove_body;
-    LinkBody link_body;
-    UserNameProof username_proof_body;
 }
 
 library MessageDataCodec {
@@ -414,7 +406,7 @@ library MessageDataCodec {
             }
 
             // Check that the field number is within bounds
-            if (field_number > 15) {
+            if (field_number > 7) {
                 return (false, pos, instance);
             }
 
@@ -472,38 +464,6 @@ library MessageDataCodec {
         }
 
         if (field_number == 7) {
-            return wire_type == ProtobufLib.WireType.LengthDelimited;
-        }
-
-        if (field_number == 8) {
-            return wire_type == ProtobufLib.WireType.Varint;
-        }
-
-        if (field_number == 9) {
-            return wire_type == ProtobufLib.WireType.LengthDelimited;
-        }
-
-        if (field_number == 10) {
-            return wire_type == ProtobufLib.WireType.LengthDelimited;
-        }
-
-        if (field_number == 11) {
-            return wire_type == ProtobufLib.WireType.Varint;
-        }
-
-        if (field_number == 12) {
-            return wire_type == ProtobufLib.WireType.LengthDelimited;
-        }
-
-        if (field_number == 13) {
-            return wire_type == ProtobufLib.WireType.Varint;
-        }
-
-        if (field_number == 14) {
-            return wire_type == ProtobufLib.WireType.LengthDelimited;
-        }
-
-        if (field_number == 15) {
             return wire_type == ProtobufLib.WireType.LengthDelimited;
         }
 
@@ -576,86 +536,6 @@ library MessageDataCodec {
         if (field_number == 7) {
             bool success;
             (success, pos) = decode_7(pos, buf, instance);
-            if (!success) {
-                return (false, pos);
-            }
-
-            return (true, pos);
-        }
-
-        if (field_number == 8) {
-            bool success;
-            (success, pos) = decode_8(pos, buf, instance);
-            if (!success) {
-                return (false, pos);
-            }
-
-            return (true, pos);
-        }
-
-        if (field_number == 9) {
-            bool success;
-            (success, pos) = decode_9(pos, buf, instance);
-            if (!success) {
-                return (false, pos);
-            }
-
-            return (true, pos);
-        }
-
-        if (field_number == 10) {
-            bool success;
-            (success, pos) = decode_10(pos, buf, instance);
-            if (!success) {
-                return (false, pos);
-            }
-
-            return (true, pos);
-        }
-
-        if (field_number == 11) {
-            bool success;
-            (success, pos) = decode_11(pos, buf, instance);
-            if (!success) {
-                return (false, pos);
-            }
-
-            return (true, pos);
-        }
-
-        if (field_number == 12) {
-            bool success;
-            (success, pos) = decode_12(pos, buf, instance);
-            if (!success) {
-                return (false, pos);
-            }
-
-            return (true, pos);
-        }
-
-        if (field_number == 13) {
-            bool success;
-            (success, pos) = decode_13(pos, buf, instance);
-            if (!success) {
-                return (false, pos);
-            }
-
-            return (true, pos);
-        }
-
-        if (field_number == 14) {
-            bool success;
-            (success, pos) = decode_14(pos, buf, instance);
-            if (!success) {
-                return (false, pos);
-            }
-
-            return (true, pos);
-        }
-
-        if (field_number == 15) {
-            bool success;
-            (success, pos) = decode_15(pos, buf, instance);
             if (!success) {
                 return (false, pos);
             }
@@ -830,196 +710,6 @@ library MessageDataCodec {
         }
 
         instance.reaction_body = nestedInstance;
-
-        return (true, pos);
-    }
-
-    // MessageData.empty
-    function decode_8(uint64 pos, bytes memory buf, MessageData memory instance) internal pure returns (bool, uint64) {
-        bool success;
-
-        bool v;
-        (success, pos, v) = ProtobufLib.decode_bool(pos, buf);
-        if (!success) {
-            return (false, pos);
-        }
-
-        // Default value must be omitted
-        if (v == false) {
-            return (false, pos);
-        }
-
-        instance.empty = v;
-
-        return (true, pos);
-    }
-
-    // MessageData.verification_add_eth_address_body
-    function decode_9(uint64 pos, bytes memory buf, MessageData memory instance) internal pure returns (bool, uint64) {
-        bool success;
-
-        uint64 len;
-        (success, pos, len) = ProtobufLib.decode_embedded_message(pos, buf);
-        if (!success) {
-            return (false, pos);
-        }
-
-        // Default value must be omitted
-        if (len == 0) {
-            return (false, pos);
-        }
-
-        VerificationAddEthAddressBody memory nestedInstance;
-        (success, pos, nestedInstance) = VerificationAddEthAddressBodyCodec.decode(pos, buf, len);
-        if (!success) {
-            return (false, pos);
-        }
-
-        instance.verification_add_eth_address_body = nestedInstance;
-
-        return (true, pos);
-    }
-
-    // MessageData.verification_remove_body
-    function decode_10(uint64 pos, bytes memory buf, MessageData memory instance) internal pure returns (bool, uint64) {
-        bool success;
-
-        uint64 len;
-        (success, pos, len) = ProtobufLib.decode_embedded_message(pos, buf);
-        if (!success) {
-            return (false, pos);
-        }
-
-        // Default value must be omitted
-        if (len == 0) {
-            return (false, pos);
-        }
-
-        VerificationRemoveBody memory nestedInstance;
-        (success, pos, nestedInstance) = VerificationRemoveBodyCodec.decode(pos, buf, len);
-        if (!success) {
-            return (false, pos);
-        }
-
-        instance.verification_remove_body = nestedInstance;
-
-        return (true, pos);
-    }
-
-    // MessageData.deprecated_signer_add_body
-    function decode_11(uint64 pos, bytes memory buf, MessageData memory instance) internal pure returns (bool, uint64) {
-        bool success;
-
-        bool v;
-        (success, pos, v) = ProtobufLib.decode_bool(pos, buf);
-        if (!success) {
-            return (false, pos);
-        }
-
-        // Default value must be omitted
-        if (v == false) {
-            return (false, pos);
-        }
-
-        instance.deprecated_signer_add_body = v;
-
-        return (true, pos);
-    }
-
-    // MessageData.user_data_body
-    function decode_12(uint64 pos, bytes memory buf, MessageData memory instance) internal pure returns (bool, uint64) {
-        bool success;
-
-        uint64 len;
-        (success, pos, len) = ProtobufLib.decode_embedded_message(pos, buf);
-        if (!success) {
-            return (false, pos);
-        }
-
-        // Default value must be omitted
-        if (len == 0) {
-            return (false, pos);
-        }
-
-        UserDataBody memory nestedInstance;
-        (success, pos, nestedInstance) = UserDataBodyCodec.decode(pos, buf, len);
-        if (!success) {
-            return (false, pos);
-        }
-
-        instance.user_data_body = nestedInstance;
-
-        return (true, pos);
-    }
-
-    // MessageData.deprecated_signer_remove_body
-    function decode_13(uint64 pos, bytes memory buf, MessageData memory instance) internal pure returns (bool, uint64) {
-        bool success;
-
-        bool v;
-        (success, pos, v) = ProtobufLib.decode_bool(pos, buf);
-        if (!success) {
-            return (false, pos);
-        }
-
-        // Default value must be omitted
-        if (v == false) {
-            return (false, pos);
-        }
-
-        instance.deprecated_signer_remove_body = v;
-
-        return (true, pos);
-    }
-
-    // MessageData.link_body
-    function decode_14(uint64 pos, bytes memory buf, MessageData memory instance) internal pure returns (bool, uint64) {
-        bool success;
-
-        uint64 len;
-        (success, pos, len) = ProtobufLib.decode_embedded_message(pos, buf);
-        if (!success) {
-            return (false, pos);
-        }
-
-        // Default value must be omitted
-        if (len == 0) {
-            return (false, pos);
-        }
-
-        LinkBody memory nestedInstance;
-        (success, pos, nestedInstance) = LinkBodyCodec.decode(pos, buf, len);
-        if (!success) {
-            return (false, pos);
-        }
-
-        instance.link_body = nestedInstance;
-
-        return (true, pos);
-    }
-
-    // MessageData.username_proof_body
-    function decode_15(uint64 pos, bytes memory buf, MessageData memory instance) internal pure returns (bool, uint64) {
-        bool success;
-
-        uint64 len;
-        (success, pos, len) = ProtobufLib.decode_embedded_message(pos, buf);
-        if (!success) {
-            return (false, pos);
-        }
-
-        // Default value must be omitted
-        if (len == 0) {
-            return (false, pos);
-        }
-
-        UserNameProof memory nestedInstance;
-        (success, pos, nestedInstance) = UserNameProofCodec.decode(pos, buf, len);
-        if (!success) {
-            return (false, pos);
-        }
-
-        instance.username_proof_body = nestedInstance;
 
         return (true, pos);
     }
@@ -1885,7 +1575,7 @@ library CastRemoveBodyCodec {
 
 struct CastId {
     uint64 fid;
-    bytes hash;
+    bytes hash_;
 }
 
 library CastIdCodec {
@@ -2003,7 +1693,7 @@ library CastIdCodec {
         return (true, pos);
     }
 
-    // CastId.hash
+    // CastId.hash_
     function decode_2(uint64 pos, bytes memory buf, CastId memory instance) internal pure returns (bool, uint64) {
         bool success;
 
@@ -2018,9 +1708,9 @@ library CastIdCodec {
             return (false, pos);
         }
 
-        instance.hash = new bytes(len);
+        instance.hash_ = new bytes(len);
         for (uint64 i = 0; i < len; i++) {
-            instance.hash[i] = buf[pos + i];
+            instance.hash_[i] = buf[pos + i];
         }
 
         pos = pos + len;
@@ -2219,7 +1909,7 @@ library ReactionBodyCodec {
 }
 
 struct VerificationAddEthAddressBody {
-    bytes address;
+    bytes address_;
     bytes eth_signature;
     bytes block_hash;
     uint32 verification_type;
@@ -2363,7 +2053,7 @@ library VerificationAddEthAddressBodyCodec {
         return (false, pos);
     }
 
-    // VerificationAddEthAddressBody.address
+    // VerificationAddEthAddressBody.address_
     function decode_1(uint64 pos, bytes memory buf, VerificationAddEthAddressBody memory instance) internal pure returns (bool, uint64) {
         bool success;
 
@@ -2378,9 +2068,9 @@ library VerificationAddEthAddressBodyCodec {
             return (false, pos);
         }
 
-        instance.address = new bytes(len);
+        instance.address_ = new bytes(len);
         for (uint64 i = 0; i < len; i++) {
-            instance.address[i] = buf[pos + i];
+            instance.address_[i] = buf[pos + i];
         }
 
         pos = pos + len;
@@ -2481,7 +2171,7 @@ library VerificationAddEthAddressBodyCodec {
 }
 
 struct VerificationRemoveBody {
-    bytes address;
+    bytes address_;
 }
 
 library VerificationRemoveBodyCodec {
@@ -2565,7 +2255,7 @@ library VerificationRemoveBodyCodec {
         return (false, pos);
     }
 
-    // VerificationRemoveBody.address
+    // VerificationRemoveBody.address_
     function decode_1(uint64 pos, bytes memory buf, VerificationRemoveBody memory instance) internal pure returns (bool, uint64) {
         bool success;
 
@@ -2580,9 +2270,9 @@ library VerificationRemoveBodyCodec {
             return (false, pos);
         }
 
-        instance.address = new bytes(len);
+        instance.address_ = new bytes(len);
         for (uint64 i = 0; i < len; i++) {
-            instance.address[i] = buf[pos + i];
+            instance.address_[i] = buf[pos + i];
         }
 
         pos = pos + len;

@@ -7,9 +7,9 @@ import "username_proof.proto";
   */
 message Message {
   MessageData data = 1; // Contents of the message
-  bytes hash = 2; // Hash digest of data
+  bytes hash_ = 2; // Hash digest of data
   HashScheme hash_scheme = 3; // Hash scheme that produced the hash digest
-  bytes signature = 4; // Signature of the hash digest
+  bytes signature = 4; // Signature of the hash  digest
   SignatureScheme signature_scheme = 5; // Signature scheme that produced the signature
   bytes signer = 6; // Public key or address of the key pair that produced the signature
   bytes data_bytes = 7; // MessageData serialized to bytes if using protobuf serialization other than ts-proto
@@ -27,14 +27,14 @@ message MessageData {
   CastAddBody cast_add_body = 5;
   CastRemoveBody cast_remove_body = 6;
   ReactionBody reaction_body = 7;
-  bool empty = 8;
-  VerificationAddEthAddressBody verification_add_eth_address_body = 9;
-  VerificationRemoveBody verification_remove_body = 10;
-  bool deprecated_signer_add_body = 11;
-  UserDataBody user_data_body = 12;
-  bool deprecated_signer_remove_body = 13;
-  LinkBody link_body = 14;
-  UserNameProof username_proof_body = 15;
+  // bool empty = 8;
+  // VerificationAddEthAddressBody verification_add_eth_address_body = 9;
+  // VerificationRemoveBody verification_remove_body = 10;
+  // bool deprecated_signer_add_body = 11;
+  // UserDataBody user_data_body = 12;
+  // bool deprecated_signer_remove_body = 13;
+  // LinkBody link_body = 14;
+  // UserNameProof username_proof_body = 15;
 }
 
 /** Type of hashing scheme used to produce a digest of MessageData */
@@ -116,7 +116,7 @@ message CastRemoveBody {
 /** Identifier used to look up a Cast */
 message CastId {
   uint64 fid = 1; // Fid of the user who created the cast
-  bytes hash = 2; // Hash of the cast
+  bytes hash_ = 2; // Hash of the cast
 }
 
 /** Adds or removes a Reaction from a Cast */
@@ -135,7 +135,7 @@ enum ReactionType {
 
 /** Adds a Verification of ownership of an Ethereum Address */
 message VerificationAddEthAddressBody {
-  bytes address = 1; // Ethereum address being verified
+  bytes address_ = 1; // Ethereum address being verified
   bytes eth_signature = 2; // Signature produced by the user's Ethereum address
   bytes block_hash = 3; // Hash of the latest Ethereum block when the signature was produced
   uint32 verification_type = 4; // Type of verification. 0 = EOA, 1 = contract
@@ -144,7 +144,7 @@ message VerificationAddEthAddressBody {
 
 /** Removes a Verification of any type */
 message VerificationRemoveBody {
-  bytes address = 1; // Address of the Verification to remove
+  bytes address_ = 1; // Address of the Verification to remove
 }
 
 /** Adds or removes a Link */

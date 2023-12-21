@@ -68,7 +68,7 @@ Gas usage mainly consists of three components:
 
 ### Is it possible to reduce gas usage per message?
 
-Yes, absolutely! The main idea is to move expensive computations off-chain, using ZK proofs.
+Yes, absolutely! The main idea is to move expensive computations (Blake3 hashing and Ed25519 signature verification) off-chain, using ZK proofs.
 In this case, the Solidity contract verifies only a short proof (≈300k gas vs 2m).
 This approach can be scaled with batching, so in the case of 10 messages, it takes 300k / 10 = 30k gas to verify a single message.
 

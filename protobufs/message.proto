@@ -25,16 +25,24 @@ message MessageData {
   uint32 timestamp = 3; // Farcaster epoch timestamp in seconds
   FarcasterNetwork network = 4; // Farcaster network the message is intended for
   CastAddBody cast_add_body = 5;
-  CastRemoveBody cast_remove_body = 6;
+
+  // CastRemoveBody cast_remove_body = 6;
+  bool empty_cast_remove_body = 6;
+
   ReactionBody reaction_body = 7;
-  // bool empty = 8;
-  // VerificationAddEthAddressBody verification_add_eth_address_body = 9;
+  bool empty = 8;
+  VerificationAddEthAddressBody verification_add_eth_address_body = 9;
+
   // VerificationRemoveBody verification_remove_body = 10;
-  // bool deprecated_signer_add_body = 11;
-  // UserDataBody user_data_body = 12;
-  // bool deprecated_signer_remove_body = 13;
-  // LinkBody link_body = 14;
+  bool empty_verification_remove_body = 10;
+
+  bool deprecated_signer_add_body = 11;
+  UserDataBody user_data_body = 12;
+  bool deprecated_signer_remove_body = 13;
+  LinkBody link_body = 14;
+
   // UserNameProof username_proof_body = 15;
+  bool empty_username_proof_body = 15;
 }
 
 /** Type of hashing scheme used to produce a digest of MessageData */

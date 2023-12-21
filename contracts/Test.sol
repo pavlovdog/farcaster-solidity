@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.9;
 
-
 import {
   MessageDataCodec,
   MessageData,
@@ -18,16 +17,30 @@ import {
   Ed25519
 } from './libraries/Ed25519.sol';
 
+
 contract Test {
-  event MessageCastAddVerified(uint64 fid, string text, uint64[] mentions);
-  event MessageReactionAddVerified(uint64 fid, ReactionType reaction_type, uint64 target_fid, bytes target_hash);
+  event MessageCastAddVerified(
+    uint64 fid,
+    string text,
+    uint64[] mentions
+  );
+
+  event MessageReactionAddVerified(
+    uint64 fid,
+    ReactionType reaction_type,
+    uint64 target_fid,
+    bytes target_hash
+  );
+
+  error InvalidSignature();
+  error InvalidEncoding();
+  error InvalidMessageType();
 
   function _verifyMessage(
     bytes32 public_key,
     bytes32 signature_r,
     bytes32 signature_s,
-    bytes memory message,
-    MessageType message_type
+    bytes memory message
   ) internal pure returns(MessageData memory) {
     // Calculate Blake3 hash of FC message (first 20 bytes)
     bytes memory message_hash = Blake3.hash(message, 20);
@@ -40,7 +53,9 @@ contract Test {
       message_hash
     );
 
-    require(valid, 'Invalid signature');
+    if (!valid) {
+      revert InvalidSignature();
+    }
 
     (
       bool success,
@@ -48,8 +63,9 @@ contract Test {
       MessageData memory message_data
     ) = MessageDataCodec.decode(0, message, uint64(message.length));
 
-    require(success, 'Failed to decode message');
-    require(message_data.type_ == message_type, 'Invalid message type');
+    if (!success) {
+      revert InvalidEncoding();
+    }
 
     return message_data;
   }
@@ -64,9 +80,12 @@ contract Test {
       public_key,
       signature_r,
       signature_s,
-      message,
-      MessageType.MESSAGE_TYPE_CAST_ADD
+      message
     );
+
+    if (message_data.type_ != MessageType.MESSAGE_TYPE_CAST_ADD) {
+      revert InvalidMessageType();
+    }
 
     emit MessageCastAddVerified(
       message_data.fid,
@@ -85,9 +104,12 @@ contract Test {
       public_key,
       signature_r,
       signature_s,
-      message,
-      MessageType.MESSAGE_TYPE_REACTION_ADD
+      message
     );
+
+    if (message_data.type_ != MessageType.MESSAGE_TYPE_REACTION_ADD) {
+      revert InvalidMessageType();
+    }
 
     emit MessageReactionAddVerified(
       message_data.fid,

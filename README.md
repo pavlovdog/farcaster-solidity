@@ -1,28 +1,54 @@
 # Farcaster Solidity
 
-A collection of Solidity libraries for interacting with the Farcaster messages onchain.
+A collection of Solidity libraries for interacting with the Farcaster messages on-chain. Made by [fastfourier.eth](https://warpcast.com/fastfourier.eth).
 
 ## Overview
 
-Describe how Farcaster protocol works.
-Message -> Message structure -> Protobuf encoding -> Blake3 hash -> Ed25519 signature
-Describe EVM limitations (no BLAKE3, no Ed25519, no protobuf encodings)
+Most of the Farcaster actions are represented as Protobuf messages, signed with the user's key. Here's an illustration of what happens when a new cast is sent to the Farcaster network:
 
-Here's an illustration of what happens when new cast is being sent to the Farcaster network:
+1. Client application forms a message from text, mentions, links, etc
+2. The message gets hashed using the Blake3 hash function, first 20 bytes of the hash are signed with the user's Ed25519 private key
+3. The message, along with the signature and some other metadata, is being sent to the network
 
-1. Client application forms message
-2. Message gets hashed using Blake3 hash function, first 20 bytes of the hash are signed with user's Ed25519 private key
-3. Message, along with the signature and some other meta, is sent to the network
+The goal of this project is to provide a set of Solidity libraries and examples, helping to verify and parse Farcaster messages on-chain.
 
-The goal of this project is to provide a set of libraries and examples of how Farcaster message can be verified onchain.
+## Usage example
 
-## Example
+The full example can be found at [contracts/Test.sol](./contracts/Test.sol).
 
 ```solidity
+function verifyCastAddMessage(
+  bytes32 public_key,
+  bytes32 signature_r,
+  bytes32 signature_s,
+  bytes memory message
+) external {
+  MessageData memory message_data = _verifyMessage(
+    public_key,
+    signature_r,
+    signature_s,
+    message
+  );
 
+  if (message_data.type_ != MessageType.MESSAGE_TYPE_CAST_ADD) {
+    revert InvalidMessageType();
+  }
+
+  emit MessageCastAddVerified(
+    message_data.fid,
+    message_data.cast_add_body.text,
+    message_data.cast_add_body.mentions
+  );
+}
 ```
 
 ## Gas usage
+
+Gas usage mainly consists of three components:
+
+- Blake3 hashing (500k - 1m)
+- Ed25519 signature verification (≈ 1m)
+- Message decoding (≈ 100k)
 
 ```
 ·-----------------------------------------|----------------------------|-------------|-----------------------------·
@@ -38,27 +64,40 @@ The goal of this project is to provide a set of libraries and examples of how Fa
 ·············|····························|··············|·············|·············|···············|··············
 ```
 
-- using native precompiles
-- using ZK scalability patterns
+## FAQ
 
-## Roadmap
+### Is it possible to reduce gas usage per message?
 
-1. Implement hashing & signature verification in ZK
-2. Implement batching
+Yes, absolutely! The main idea is to move expensive computations off-chain, using ZK proofs.
+In this case, the Solidity contract verifies only a short proof (≈300k gas vs 2m).
+This approach can be scaled with batching, so in the case of 10 messages, it takes 300k / 10 = 30k gas to verify a single message.
+
+### Which message types are supported?
+
+Most of them. Due to the `MessageDataCodec` library size limitations, decodings for `CastRemoveBody`, `VerificationRemoveBody`, and `UserNameProof` are not included. You can do it yourself, by modifying the [message.proto](./protobufs/message.proto), check out the [Running locally](#running-locally) section.
+
+### My contract does not fit into the 24 kb limit
+
+Try to use external libraries, as they are quite heavy to be used internally. Check the [test.ts](./test/test.ts) for deployment reference.
 
 ## Running locally
 
-```
+```bash
+node --version
+v18.17.1
+npm --version
+9.6.7
+
 yarn
 yarn hh:compile
 yarn hh:test
-# Get contract's size in kBs
+# Get contract's size in kb
 yarn hh:size
 ```
 
-### Upgrading proto schemes
+### Modifying proto schemes
 
-To upgrade .proto schemes, install [protobuf3-solidity](https://github.com/celestiaorg/protobuf3-solidity).
+To modify .proto schemes, install [protobuf3-solidity](https://github.com/celestiaorg/protobuf3-solidity).
 
 ```
 git clone https://github.com/celestiaorg/protobuf3-solidity
@@ -68,13 +107,13 @@ make
 
 Export the path to the binary and run `yarn protoc` to update Solidity libraries and TS definitions
 
-```
+```bash
 export PROTO_GEN_SOL=./../protobuf3-solidity/bin/protoc-gen-sol
 cd farcaster-solidity
 yarn protoc
 ```
 
-Keep in mind, that not all .proto features are suppoted (such as `oneOf` fields, repeated strings, ). Another important thing is that message fields should be numerated in an incremental order.
+Keep in mind, that not all Protobuf features are supported (`oneOf` fields, repeated strings, non-packed repeated fields). Another important thing is that message fields should be enumerated in a strict incremental order.
 
 ## Links & credits
 

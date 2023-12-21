@@ -1,0 +1,21 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "hash",
+    "outputs": [
+      {
+        "internalType": "uint64[8]",
+        "name": "",
+        "type": "uint64[8]"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  }
+]

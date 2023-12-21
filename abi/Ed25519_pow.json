@@ -1,0 +1,26 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "v",
+        "type": "uint256"
+      }
+    ],
+    "name": "pow22501",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "p22501",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "p11",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  }
+]

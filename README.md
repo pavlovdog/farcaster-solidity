@@ -1,16 +1,23 @@
 # Farcaster Solidity
 
-A collection of Solidity libraries for interacting with the Farcaster messages on-chain. Made by [fastfourier.eth](https://warpcast.com/fastfourier.eth).
+A set of Solidity libraries for verifying and parsing Farcaster messages on-chain. Made by [fastfourier.eth](https://warpcast.com/fastfourier.eth).
+
+## Introduction
+
+The difference between a Farcaster and many other social networks is the cryptographic protocol that allows any user to verify any action, that happened on the network. Using cryptographic signatures and an onchain key registry, it is possible to verify the correctness of the cast, like, the following relation, etc.
+
+The goal of this project is to provide a set of Solidity libraries and examples, helping to verify and parse Farcaster messages on-chain.
 
 ## Overview
 
-Most of the Farcaster actions are represented as Protobuf messages, signed with the user's key. Here's an illustration of what happens when a new cast is sent to the Farcaster network:
+Farcaster messages (cast, like, following, etc) are represented as Protobuf messages, signed with the user's private key. Here's an illustration of what happens when a new cast is sent to the Farcaster network:
 
-1. Client application forms a message from text, mentions, links, etc
-2. The message gets hashed using the Blake3 hash function, first 20 bytes of the hash are signed with the user's Ed25519 private key
-3. The message, along with the signature and some other metadata, is being sent to the network
+1. Alice publishes a cast. Application (eg Warpcast) forms a message from text, mentions, links, etc
+2. The message is encoded using the Protobuf scheme into a series of bytes. Then it gets hashed using the Blake3 hash function, and the first 20 bytes of the hash are signed with the user's Ed25519 private key. The corresponding public key is stored in a smart contract called `KeyRegistry` on Optimism Mainnet.
+3. The message and the signature, are being sent to the network
+4. Each network participant verifies, that the signature is correct and accepts the message as valid.
 
-The goal of this project is to provide a set of Solidity libraries and examples, helping to verify and parse Farcaster messages on-chain.
+All these actions can be done inside the smart contract, verifying that Alice indeed sent the message!
 
 ## Usage example
 
@@ -46,9 +53,9 @@ function verifyCastAddMessage(
 
 Gas usage mainly consists of three components:
 
-- Blake3 hashing (500k - 1m)
-- Ed25519 signature verification (≈ 1m)
-- Message decoding (≈ 100k)
+- Blake3 hashing (500k - 1m gas)
+- Ed25519 signature verification (≈ 1m gas)
+- Message decoding (≈ 100k gas)
 
 ```
 ·-----------------------------------------|----------------------------|-------------|-----------------------------·
@@ -74,11 +81,32 @@ This approach can be scaled with batching, so in the case of 10 messages, it tak
 
 ### Which message types are supported?
 
-Most of them. Due to the `MessageDataCodec` library size limitations, decodings for `CastRemoveBody`, `VerificationRemoveBody`, and `UserNameProof` are not included. You can do it yourself, by modifying the [message.proto](./protobufs/message.proto), check out the [Running locally](#running-locally) section.
+Most of them. Due to the contract size limitations, decodings for `CastRemoveBody`, `VerificationRemoveBody`, and `UserNameProof` are not included. You can include them yourself, by modifying the [message.proto](./protobufs/message.proto), check out the [Running Locally](#running-locally) section.
 
 ### My contract does not fit into the 24 kb limit
 
 Try to use external libraries, as they are quite heavy to be used internally. Check the [test.ts](./test/test.ts) for deployment reference.
+
+### How can I verify the correctness of the public key?
+
+Farcaster uses onchain `KeyRegistry` contract ([spec](https://github.com/farcasterxyz/protocol/blob/main/docs/SPECIFICATION.md#12-key-registry)), which stores the relation between the user's FID (Farcaster ID) and a public key. Here's a verification example:
+
+```solidity
+address KEY_REGISTRY = 0x....;
+
+IKeyRegistry.KeyData memory keyData = IKeyRegistry(KEY_REGISTRY).keyDataOf(
+  messageData.fid,
+  bytes.concat(publicKey)
+);
+
+if (keyData.state != IKeyRegistry.KeyState.ADDED) revert InvalidKey();
+```
+
+Keep in mind, that KeyRegistry contact has been migrated multiple times, so make sure you use the actual address from the [Farcaster Specification](https://github.com/farcasterxyz/protocol/blob/main/docs/SPECIFICATION.md#12-key-registry).
+
+### Can I use this project in networks other than Optimism Mainnet?
+
+Technically it's possible, but it's quite tricky. The best way to achieve this will be by using storage proofs for KeyRegistry storage verification.
 
 ## Running locally
 

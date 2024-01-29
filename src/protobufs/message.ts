@@ -383,7 +383,7 @@ export interface MessageData {
   /** VerificationRemoveBody verification_remove_body = 10; */
   emptyVerificationRemoveBody: boolean;
   deprecatedSignerAddBody: boolean;
-  userDataBody: UserDataBody | undefined;
+  userDataBody: boolean;
   deprecatedSignerRemoveBody: boolean;
   linkBody:
     | LinkBody
@@ -655,7 +655,7 @@ function createBaseMessageData(): MessageData {
     verificationAddEthAddressBody: undefined,
     emptyVerificationRemoveBody: false,
     deprecatedSignerAddBody: false,
-    userDataBody: undefined,
+    userDataBody: false,
     deprecatedSignerRemoveBody: false,
     linkBody: undefined,
     emptyUsernameProofBody: false,
@@ -698,8 +698,8 @@ export const MessageData = {
     if (message.deprecatedSignerAddBody === true) {
       writer.uint32(88).bool(message.deprecatedSignerAddBody);
     }
-    if (message.userDataBody !== undefined) {
-      UserDataBody.encode(message.userDataBody, writer.uint32(98).fork()).ldelim();
+    if (message.userDataBody === true) {
+      writer.uint32(96).bool(message.userDataBody);
     }
     if (message.deprecatedSignerRemoveBody === true) {
       writer.uint32(104).bool(message.deprecatedSignerRemoveBody);
@@ -801,11 +801,11 @@ export const MessageData = {
           message.deprecatedSignerAddBody = reader.bool();
           continue;
         case 12:
-          if (tag != 98) {
+          if (tag != 96) {
             break;
           }
 
-          message.userDataBody = UserDataBody.decode(reader, reader.uint32());
+          message.userDataBody = reader.bool();
           continue;
         case 13:
           if (tag != 104) {
@@ -861,7 +861,7 @@ export const MessageData = {
         ? Boolean(object.emptyVerificationRemoveBody)
         : false,
       deprecatedSignerAddBody: isSet(object.deprecatedSignerAddBody) ? Boolean(object.deprecatedSignerAddBody) : false,
-      userDataBody: isSet(object.userDataBody) ? UserDataBody.fromJSON(object.userDataBody) : undefined,
+      userDataBody: isSet(object.userDataBody) ? Boolean(object.userDataBody) : false,
       deprecatedSignerRemoveBody: isSet(object.deprecatedSignerRemoveBody)
         ? Boolean(object.deprecatedSignerRemoveBody)
         : false,
@@ -890,8 +890,7 @@ export const MessageData = {
     message.emptyVerificationRemoveBody !== undefined &&
       (obj.emptyVerificationRemoveBody = message.emptyVerificationRemoveBody);
     message.deprecatedSignerAddBody !== undefined && (obj.deprecatedSignerAddBody = message.deprecatedSignerAddBody);
-    message.userDataBody !== undefined &&
-      (obj.userDataBody = message.userDataBody ? UserDataBody.toJSON(message.userDataBody) : undefined);
+    message.userDataBody !== undefined && (obj.userDataBody = message.userDataBody);
     message.deprecatedSignerRemoveBody !== undefined &&
       (obj.deprecatedSignerRemoveBody = message.deprecatedSignerRemoveBody);
     message.linkBody !== undefined && (obj.linkBody = message.linkBody ? LinkBody.toJSON(message.linkBody) : undefined);
@@ -925,9 +924,7 @@ export const MessageData = {
         : undefined;
     message.emptyVerificationRemoveBody = object.emptyVerificationRemoveBody ?? false;
     message.deprecatedSignerAddBody = object.deprecatedSignerAddBody ?? false;
-    message.userDataBody = (object.userDataBody !== undefined && object.userDataBody !== null)
-      ? UserDataBody.fromPartial(object.userDataBody)
-      : undefined;
+    message.userDataBody = object.userDataBody ?? false;
     message.deprecatedSignerRemoveBody = object.deprecatedSignerRemoveBody ?? false;
     message.linkBody = (object.linkBody !== undefined && object.linkBody !== null)
       ? LinkBody.fromPartial(object.linkBody)

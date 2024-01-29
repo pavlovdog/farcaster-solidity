@@ -37,7 +37,7 @@ message MessageData {
   bool empty_verification_remove_body = 10;
 
   bool deprecated_signer_add_body = 11;
-  UserDataBody user_data_body = 12;
+  bool user_data_body = 12;
   bool deprecated_signer_remove_body = 13;
   LinkBody link_body = 14;
 

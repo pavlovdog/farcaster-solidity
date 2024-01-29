@@ -383,7 +383,7 @@ struct MessageData {
     VerificationAddEthAddressBody verification_add_eth_address_body;
     bool empty_verification_remove_body;
     bool deprecated_signer_add_body;
-    UserDataBody user_data_body;
+    bool user_data_body;
     bool deprecated_signer_remove_body;
     LinkBody link_body;
     bool empty_username_proof_body;
@@ -493,7 +493,7 @@ library MessageDataCodec {
         }
 
         if (field_number == 12) {
-            return wire_type == ProtobufLib.WireType.LengthDelimited;
+            return wire_type == ProtobufLib.WireType.Varint;
         }
 
         if (field_number == 13) {
@@ -933,24 +933,18 @@ library MessageDataCodec {
     function decode_12(uint64 pos, bytes memory buf, MessageData memory instance) internal pure returns (bool, uint64) {
         bool success;
 
-        uint64 len;
-        (success, pos, len) = ProtobufLib.decode_embedded_message(pos, buf);
+        bool v;
+        (success, pos, v) = ProtobufLib.decode_bool(pos, buf);
         if (!success) {
             return (false, pos);
         }
 
         // Default value must be omitted
-        if (len == 0) {
+        if (v == false) {
             return (false, pos);
         }
 
-        UserDataBody memory nestedInstance;
-        (success, pos, nestedInstance) = UserDataBodyCodec.decode(pos, buf, len);
-        if (!success) {
-            return (false, pos);
-        }
-
-        instance.user_data_body = nestedInstance;
+        instance.user_data_body = v;
 
         return (true, pos);
     }

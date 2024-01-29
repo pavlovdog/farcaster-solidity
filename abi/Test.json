@@ -50,6 +50,43 @@
       },
       {
         "indexed": false,
+        "internalType": "uint32",
+        "name": "button_index",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "target_fid",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "target_hash",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "url",
+        "type": "bytes"
+      }
+    ],
+    "name": "MessageFrameActionBodyVerified",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "fid",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
         "internalType": "enum ReactionType",
         "name": "reaction_type",
         "type": "uint8"
@@ -94,6 +131,34 @@
       }
     ],
     "name": "verifyCastAddMessage",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "public_key",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "signature_r",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "signature_s",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes",
+        "name": "message",
+        "type": "bytes"
+      }
+    ],
+    "name": "verifyFrameActionBodyMessage",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

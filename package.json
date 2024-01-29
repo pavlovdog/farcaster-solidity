@@ -1,9 +1,10 @@
 {
   "name": "farcaster-solidity",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "index.js",
   "author": "Sergey Potekhin <hello@sergeypotekhin.com>",
   "license": "MIT",
+  "description": "A collection of Solidity libraries for interacting with the Farcaster messages on-chain",
   "scripts": {
     "lint": "yarn lint:sol",
     "lint:sol": "solhint \"contracts/**/*.sol\"",

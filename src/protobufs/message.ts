@@ -98,6 +98,8 @@ export enum MessageType {
   USER_DATA_ADD = 11,
   /** USERNAME_PROOF - Add or replace a username proof */
   USERNAME_PROOF = 12,
+  /** FRAME_ACTION - A Farcaster Frame action */
+  FRAME_ACTION = 13,
 }
 
 export function messageTypeFromJSON(object: any): MessageType {
@@ -141,6 +143,9 @@ export function messageTypeFromJSON(object: any): MessageType {
     case 12:
     case "MESSAGE_TYPE_USERNAME_PROOF":
       return MessageType.USERNAME_PROOF;
+    case 13:
+    case "MESSAGE_TYPE_FRAME_ACTION":
+      return MessageType.FRAME_ACTION;
     default:
       throw new tsProtoGlobalThis.Error("Unrecognized enum value " + object + " for enum MessageType");
   }
@@ -174,6 +179,8 @@ export function messageTypeToJSON(object: MessageType): string {
       return "MESSAGE_TYPE_USER_DATA_ADD";
     case MessageType.USERNAME_PROOF:
       return "MESSAGE_TYPE_USERNAME_PROOF";
+    case MessageType.FRAME_ACTION:
+      return "MESSAGE_TYPE_FRAME_ACTION";
     default:
       throw new tsProtoGlobalThis.Error("Unrecognized enum value " + object + " for enum MessageType");
   }
@@ -383,6 +390,7 @@ export interface MessageData {
     | undefined;
   /** UserNameProof username_proof_body = 15; */
   emptyUsernameProofBody: boolean;
+  frameActionBody: FrameActionBody | undefined;
 }
 
 /** Adds metadata about a user */
@@ -472,6 +480,16 @@ export interface LinkBody {
   displayTimestamp: number;
   /** The fid the link relates to */
   targetFid: number;
+}
+
+/** A Farcaster Frame action */
+export interface FrameActionBody {
+  /** URL of the Frame triggering the action */
+  url: Uint8Array;
+  /** The index of the button pressed (1-4) */
+  buttonIndex: number;
+  /** The cast which contained the frame url */
+  castId: CastId | undefined;
 }
 
 function createBaseMessage(): Message {
@@ -641,6 +659,7 @@ function createBaseMessageData(): MessageData {
     deprecatedSignerRemoveBody: false,
     linkBody: undefined,
     emptyUsernameProofBody: false,
+    frameActionBody: undefined,
   };
 }
 
@@ -690,6 +709,9 @@ export const MessageData = {
     }
     if (message.emptyUsernameProofBody === true) {
       writer.uint32(120).bool(message.emptyUsernameProofBody);
+    }
+    if (message.frameActionBody !== undefined) {
+      FrameActionBody.encode(message.frameActionBody, writer.uint32(130).fork()).ldelim();
     }
     return writer;
   },
@@ -806,6 +828,13 @@ export const MessageData = {
 
           message.emptyUsernameProofBody = reader.bool();
           continue;
+        case 16:
+          if (tag != 130) {
+            break;
+          }
+
+          message.frameActionBody = FrameActionBody.decode(reader, reader.uint32());
+          continue;
       }
       if ((tag & 7) == 4 || tag == 0) {
         break;
@@ -838,6 +867,7 @@ export const MessageData = {
         : false,
       linkBody: isSet(object.linkBody) ? LinkBody.fromJSON(object.linkBody) : undefined,
       emptyUsernameProofBody: isSet(object.emptyUsernameProofBody) ? Boolean(object.emptyUsernameProofBody) : false,
+      frameActionBody: isSet(object.frameActionBody) ? FrameActionBody.fromJSON(object.frameActionBody) : undefined,
     };
   },
 
@@ -866,6 +896,8 @@ export const MessageData = {
       (obj.deprecatedSignerRemoveBody = message.deprecatedSignerRemoveBody);
     message.linkBody !== undefined && (obj.linkBody = message.linkBody ? LinkBody.toJSON(message.linkBody) : undefined);
     message.emptyUsernameProofBody !== undefined && (obj.emptyUsernameProofBody = message.emptyUsernameProofBody);
+    message.frameActionBody !== undefined &&
+      (obj.frameActionBody = message.frameActionBody ? FrameActionBody.toJSON(message.frameActionBody) : undefined);
     return obj;
   },
 
@@ -901,6 +933,9 @@ export const MessageData = {
       ? LinkBody.fromPartial(object.linkBody)
       : undefined;
     message.emptyUsernameProofBody = object.emptyUsernameProofBody ?? false;
+    message.frameActionBody = (object.frameActionBody !== undefined && object.frameActionBody !== null)
+      ? FrameActionBody.fromPartial(object.frameActionBody)
+      : undefined;
     return message;
   },
 };
@@ -1708,6 +1743,93 @@ export const LinkBody = {
     message.type = object.type ?? "";
     message.displayTimestamp = object.displayTimestamp ?? 0;
     message.targetFid = object.targetFid ?? 0;
+    return message;
+  },
+};
+
+function createBaseFrameActionBody(): FrameActionBody {
+  return { url: new Uint8Array(), buttonIndex: 0, castId: undefined };
+}
+
+export const FrameActionBody = {
+  encode(message: FrameActionBody, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.url.length !== 0) {
+      writer.uint32(10).bytes(message.url);
+    }
+    if (message.buttonIndex !== 0) {
+      writer.uint32(16).uint32(message.buttonIndex);
+    }
+    if (message.castId !== undefined) {
+      CastId.encode(message.castId, writer.uint32(26).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): FrameActionBody {
+    const reader = input instanceof _m0.Reader ? input : _m0.Reader.create(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseFrameActionBody();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag != 10) {
+            break;
+          }
+
+          message.url = reader.bytes();
+          continue;
+        case 2:
+          if (tag != 16) {
+            break;
+          }
+
+          message.buttonIndex = reader.uint32();
+          continue;
+        case 3:
+          if (tag != 26) {
+            break;
+          }
+
+          message.castId = CastId.decode(reader, reader.uint32());
+          continue;
+      }
+      if ((tag & 7) == 4 || tag == 0) {
+        break;
+      }
+      reader.skipType(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): FrameActionBody {
+    return {
+      url: isSet(object.url) ? bytesFromBase64(object.url) : new Uint8Array(),
+      buttonIndex: isSet(object.buttonIndex) ? Number(object.buttonIndex) : 0,
+      castId: isSet(object.castId) ? CastId.fromJSON(object.castId) : undefined,
+    };
+  },
+
+  toJSON(message: FrameActionBody): unknown {
+    const obj: any = {};
+    message.url !== undefined &&
+      (obj.url = base64FromBytes(message.url !== undefined ? message.url : new Uint8Array()));
+    message.buttonIndex !== undefined && (obj.buttonIndex = Math.round(message.buttonIndex));
+    message.castId !== undefined && (obj.castId = message.castId ? CastId.toJSON(message.castId) : undefined);
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<FrameActionBody>, I>>(base?: I): FrameActionBody {
+    return FrameActionBody.fromPartial(base ?? {});
+  },
+
+  fromPartial<I extends Exact<DeepPartial<FrameActionBody>, I>>(object: I): FrameActionBody {
+    const message = createBaseFrameActionBody();
+    message.url = object.url ?? new Uint8Array();
+    message.buttonIndex = object.buttonIndex ?? 0;
+    message.castId = (object.castId !== undefined && object.castId !== null)
+      ? CastId.fromPartial(object.castId)
+      : undefined;
     return message;
   },
 };

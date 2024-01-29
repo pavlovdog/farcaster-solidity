@@ -32,6 +32,14 @@ contract Test {
     bytes target_hash
   );
 
+  event MessageFrameActionBodyVerified(
+    uint64 fid,
+    uint32 button_index,
+    uint64 target_fid,
+    bytes target_hash,
+    bytes url
+  );
+
   error InvalidSignature();
   error InvalidEncoding();
   error InvalidMessageType();
@@ -116,6 +124,32 @@ contract Test {
       message_data.reaction_body.type_,
       message_data.reaction_body.target_cast_id.fid,
       message_data.reaction_body.target_cast_id.hash_
+    );
+  }
+
+  function verifyFrameActionBodyMessage(
+    bytes32 public_key,
+    bytes32 signature_r,
+    bytes32 signature_s,
+    bytes memory message
+  ) external {
+    MessageData memory message_data = _verifyMessage(
+      public_key,
+      signature_r,
+      signature_s,
+      message
+    );
+
+    if (message_data.type_ != MessageType.MESSAGE_TYPE_FRAME_ACTION) {
+      revert InvalidMessageType();
+    }
+
+    emit MessageFrameActionBodyVerified(
+      message_data.fid,
+      message_data.frame_action_body.button_index,
+      message_data.frame_action_body.cast_id.fid,
+      message_data.frame_action_body.cast_id.hash_,
+      message_data.frame_action_body.url
     );
   }
 }

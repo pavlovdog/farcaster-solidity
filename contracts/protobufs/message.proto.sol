@@ -10,7 +10,7 @@ enum HashScheme { HASH_SCHEME_NONE, HASH_SCHEME_BLAKE3 }
 
 enum SignatureScheme { SIGNATURE_SCHEME_NONE, SIGNATURE_SCHEME_ED25519, SIGNATURE_SCHEME_EIP712 }
 
-enum MessageType { MESSAGE_TYPE_NONE, MESSAGE_TYPE_CAST_ADD, MESSAGE_TYPE_CAST_REMOVE, MESSAGE_TYPE_REACTION_ADD, MESSAGE_TYPE_REACTION_REMOVE, MESSAGE_TYPE_LINK_ADD, MESSAGE_TYPE_LINK_REMOVE, MESSAGE_TYPE_VERIFICATION_ADD_ETH_ADDRESS, MESSAGE_TYPE_VERIFICATION_REMOVE, DEPRECATED_MESSAGE_TYPE_SIGNER_ADD, DEPRECATED_MESSAGE_TYPE_SIGNER_REMOVE, MESSAGE_TYPE_USER_DATA_ADD, MESSAGE_TYPE_USERNAME_PROOF }
+enum MessageType { MESSAGE_TYPE_NONE, MESSAGE_TYPE_CAST_ADD, MESSAGE_TYPE_CAST_REMOVE, MESSAGE_TYPE_REACTION_ADD, MESSAGE_TYPE_REACTION_REMOVE, MESSAGE_TYPE_LINK_ADD, MESSAGE_TYPE_LINK_REMOVE, MESSAGE_TYPE_VERIFICATION_ADD_ETH_ADDRESS, MESSAGE_TYPE_VERIFICATION_REMOVE, DEPRECATED_MESSAGE_TYPE_SIGNER_ADD, DEPRECATED_MESSAGE_TYPE_SIGNER_REMOVE, MESSAGE_TYPE_USER_DATA_ADD, MESSAGE_TYPE_USERNAME_PROOF, MESSAGE_TYPE_FRAME_ACTION }
 
 enum FarcasterNetwork { FARCASTER_NETWORK_NONE, FARCASTER_NETWORK_MAINNET, FARCASTER_NETWORK_TESTNET, FARCASTER_NETWORK_DEVNET }
 
@@ -387,6 +387,7 @@ struct MessageData {
     bool deprecated_signer_remove_body;
     LinkBody link_body;
     bool empty_username_proof_body;
+    FrameActionBody frame_action_body;
 }
 
 library MessageDataCodec {
@@ -414,7 +415,7 @@ library MessageDataCodec {
             }
 
             // Check that the field number is within bounds
-            if (field_number > 15) {
+            if (field_number > 16) {
                 return (false, pos, instance);
             }
 
@@ -505,6 +506,10 @@ library MessageDataCodec {
 
         if (field_number == 15) {
             return wire_type == ProtobufLib.WireType.Varint;
+        }
+
+        if (field_number == 16) {
+            return wire_type == ProtobufLib.WireType.LengthDelimited;
         }
 
         return false;
@@ -663,6 +668,16 @@ library MessageDataCodec {
             return (true, pos);
         }
 
+        if (field_number == 16) {
+            bool success;
+            (success, pos) = decode_16(pos, buf, instance);
+            if (!success) {
+                return (false, pos);
+            }
+
+            return (true, pos);
+        }
+
         return (false, pos);
     }
 
@@ -682,7 +697,7 @@ library MessageDataCodec {
         }
 
         // Check that value is within enum range
-        if (v < 0 || v > 12) {
+        if (v < 0 || v > 13) {
             return (false, pos);
         }
 
@@ -1002,6 +1017,32 @@ library MessageDataCodec {
         }
 
         instance.empty_username_proof_body = v;
+
+        return (true, pos);
+    }
+
+    // MessageData.frame_action_body
+    function decode_16(uint64 pos, bytes memory buf, MessageData memory instance) internal pure returns (bool, uint64) {
+        bool success;
+
+        uint64 len;
+        (success, pos, len) = ProtobufLib.decode_embedded_message(pos, buf);
+        if (!success) {
+            return (false, pos);
+        }
+
+        // Default value must be omitted
+        if (len == 0) {
+            return (false, pos);
+        }
+
+        FrameActionBody memory nestedInstance;
+        (success, pos, nestedInstance) = FrameActionBodyCodec.decode(pos, buf, len);
+        if (!success) {
+            return (false, pos);
+        }
+
+        instance.frame_action_body = nestedInstance;
 
         return (true, pos);
     }
@@ -2745,6 +2786,194 @@ library LinkBodyCodec {
         }
 
         instance.target_fid = v;
+
+        return (true, pos);
+    }
+
+}
+
+struct FrameActionBody {
+    bytes url;
+    uint32 button_index;
+    CastId cast_id;
+}
+
+library FrameActionBodyCodec {
+    function decode(uint64 initial_pos, bytes memory buf, uint64 len) internal pure returns (bool, uint64, FrameActionBody memory) {
+        // Message instance
+        FrameActionBody memory instance;
+        // Previous field number
+        uint64 previous_field_number = 0;
+        // Current position in the buffer
+        uint64 pos = initial_pos;
+
+        // Sanity checks
+        if (pos + len < pos) {
+            return (false, pos, instance);
+        }
+
+        while (pos - initial_pos < len) {
+            // Decode the key (field number and wire type)
+            bool success;
+            uint64 field_number;
+            ProtobufLib.WireType wire_type;
+            (success, pos, field_number, wire_type) = ProtobufLib.decode_key(pos, buf);
+            if (!success) {
+                return (false, pos, instance);
+            }
+
+            // Check that the field number is within bounds
+            if (field_number > 3) {
+                return (false, pos, instance);
+            }
+
+            // Check that the field number of monotonically increasing
+            if (field_number <= previous_field_number) {
+                return (false, pos, instance);
+            }
+
+            // Check that the wire type is correct
+            success = check_key(field_number, wire_type);
+            if (!success) {
+                return (false, pos, instance);
+            }
+
+            // Actually decode the field
+            (success, pos) = decode_field(pos, buf, len, field_number, instance);
+            if (!success) {
+                return (false, pos, instance);
+            }
+
+            previous_field_number = field_number;
+        }
+
+        // Decoding must have consumed len bytes
+        if (pos != initial_pos + len) {
+            return (false, pos, instance);
+        }
+
+        return (true, pos, instance);
+    }
+
+    function check_key(uint64 field_number, ProtobufLib.WireType wire_type) internal pure returns (bool) {
+        if (field_number == 1) {
+            return wire_type == ProtobufLib.WireType.LengthDelimited;
+        }
+
+        if (field_number == 2) {
+            return wire_type == ProtobufLib.WireType.Varint;
+        }
+
+        if (field_number == 3) {
+            return wire_type == ProtobufLib.WireType.LengthDelimited;
+        }
+
+        return false;
+    }
+
+    function decode_field(uint64 initial_pos, bytes memory buf, uint64 len, uint64 field_number, FrameActionBody memory instance) internal pure returns (bool, uint64) {
+        uint64 pos = initial_pos;
+
+        if (field_number == 1) {
+            bool success;
+            (success, pos) = decode_1(pos, buf, instance);
+            if (!success) {
+                return (false, pos);
+            }
+
+            return (true, pos);
+        }
+
+        if (field_number == 2) {
+            bool success;
+            (success, pos) = decode_2(pos, buf, instance);
+            if (!success) {
+                return (false, pos);
+            }
+
+            return (true, pos);
+        }
+
+        if (field_number == 3) {
+            bool success;
+            (success, pos) = decode_3(pos, buf, instance);
+            if (!success) {
+                return (false, pos);
+            }
+
+            return (true, pos);
+        }
+
+        return (false, pos);
+    }
+
+    // FrameActionBody.url
+    function decode_1(uint64 pos, bytes memory buf, FrameActionBody memory instance) internal pure returns (bool, uint64) {
+        bool success;
+
+        uint64 len;
+        (success, pos, len) = ProtobufLib.decode_bytes(pos, buf);
+        if (!success) {
+            return (false, pos);
+        }
+
+        // Default value must be omitted
+        if (len == 0) {
+            return (false, pos);
+        }
+
+        instance.url = new bytes(len);
+        for (uint64 i = 0; i < len; i++) {
+            instance.url[i] = buf[pos + i];
+        }
+
+        pos = pos + len;
+
+        return (true, pos);
+    }
+
+    // FrameActionBody.button_index
+    function decode_2(uint64 pos, bytes memory buf, FrameActionBody memory instance) internal pure returns (bool, uint64) {
+        bool success;
+
+        uint32 v;
+        (success, pos, v) = ProtobufLib.decode_uint32(pos, buf);
+        if (!success) {
+            return (false, pos);
+        }
+
+        // Default value must be omitted
+        if (v == 0) {
+            return (false, pos);
+        }
+
+        instance.button_index = v;
+
+        return (true, pos);
+    }
+
+    // FrameActionBody.cast_id
+    function decode_3(uint64 pos, bytes memory buf, FrameActionBody memory instance) internal pure returns (bool, uint64) {
+        bool success;
+
+        uint64 len;
+        (success, pos, len) = ProtobufLib.decode_embedded_message(pos, buf);
+        if (!success) {
+            return (false, pos);
+        }
+
+        // Default value must be omitted
+        if (len == 0) {
+            return (false, pos);
+        }
+
+        CastId memory nestedInstance;
+        (success, pos, nestedInstance) = CastIdCodec.decode(pos, buf, len);
+        if (!success) {
+            return (false, pos);
+        }
+
+        instance.cast_id = nestedInstance;
 
         return (true, pos);
     }

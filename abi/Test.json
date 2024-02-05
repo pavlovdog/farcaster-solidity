@@ -71,6 +71,12 @@
         "internalType": "bytes",
         "name": "url",
         "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "input_text",
+        "type": "bytes"
       }
     ],
     "name": "MessageFrameActionBodyVerified",

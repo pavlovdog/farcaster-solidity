@@ -489,7 +489,11 @@ export interface FrameActionBody {
   /** The index of the button pressed (1-4) */
   buttonIndex: number;
   /** The cast which contained the frame url */
-  castId: CastId | undefined;
+  castId:
+    | CastId
+    | undefined;
+  /** Text input from the user, if present */
+  inputText: Uint8Array;
 }
 
 function createBaseMessage(): Message {
@@ -1745,7 +1749,7 @@ export const LinkBody = {
 };
 
 function createBaseFrameActionBody(): FrameActionBody {
-  return { url: new Uint8Array(), buttonIndex: 0, castId: undefined };
+  return { url: new Uint8Array(), buttonIndex: 0, castId: undefined, inputText: new Uint8Array() };
 }
 
 export const FrameActionBody = {
@@ -1758,6 +1762,9 @@ export const FrameActionBody = {
     }
     if (message.castId !== undefined) {
       CastId.encode(message.castId, writer.uint32(26).fork()).ldelim();
+    }
+    if (message.inputText.length !== 0) {
+      writer.uint32(34).bytes(message.inputText);
     }
     return writer;
   },
@@ -1790,6 +1797,13 @@ export const FrameActionBody = {
 
           message.castId = CastId.decode(reader, reader.uint32());
           continue;
+        case 4:
+          if (tag != 34) {
+            break;
+          }
+
+          message.inputText = reader.bytes();
+          continue;
       }
       if ((tag & 7) == 4 || tag == 0) {
         break;
@@ -1804,6 +1818,7 @@ export const FrameActionBody = {
       url: isSet(object.url) ? bytesFromBase64(object.url) : new Uint8Array(),
       buttonIndex: isSet(object.buttonIndex) ? Number(object.buttonIndex) : 0,
       castId: isSet(object.castId) ? CastId.fromJSON(object.castId) : undefined,
+      inputText: isSet(object.inputText) ? bytesFromBase64(object.inputText) : new Uint8Array(),
     };
   },
 
@@ -1813,6 +1828,8 @@ export const FrameActionBody = {
       (obj.url = base64FromBytes(message.url !== undefined ? message.url : new Uint8Array()));
     message.buttonIndex !== undefined && (obj.buttonIndex = Math.round(message.buttonIndex));
     message.castId !== undefined && (obj.castId = message.castId ? CastId.toJSON(message.castId) : undefined);
+    message.inputText !== undefined &&
+      (obj.inputText = base64FromBytes(message.inputText !== undefined ? message.inputText : new Uint8Array()));
     return obj;
   },
 
@@ -1827,6 +1844,7 @@ export const FrameActionBody = {
     message.castId = (object.castId !== undefined && object.castId !== null)
       ? CastId.fromPartial(object.castId)
       : undefined;
+    message.inputText = object.inputText ?? new Uint8Array();
     return message;
   },
 };

@@ -110,7 +110,7 @@ Technically it's possible, but it's quite tricky. The best way to achieve this w
 
 ### How can I use it in frames?
 
-```typescipt
+```javascript
 import { NextRequest, NextResponse } from "next/server";
 import {
   Factories,

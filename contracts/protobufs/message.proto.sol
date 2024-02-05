@@ -2790,6 +2790,7 @@ struct FrameActionBody {
     bytes url;
     uint32 button_index;
     CastId cast_id;
+    bytes input_text;
 }
 
 library FrameActionBodyCodec {
@@ -2817,7 +2818,7 @@ library FrameActionBodyCodec {
             }
 
             // Check that the field number is within bounds
-            if (field_number > 3) {
+            if (field_number > 4) {
                 return (false, pos, instance);
             }
 
@@ -2862,6 +2863,10 @@ library FrameActionBodyCodec {
             return wire_type == ProtobufLib.WireType.LengthDelimited;
         }
 
+        if (field_number == 4) {
+            return wire_type == ProtobufLib.WireType.LengthDelimited;
+        }
+
         return false;
     }
 
@@ -2891,6 +2896,16 @@ library FrameActionBodyCodec {
         if (field_number == 3) {
             bool success;
             (success, pos) = decode_3(pos, buf, instance);
+            if (!success) {
+                return (false, pos);
+            }
+
+            return (true, pos);
+        }
+
+        if (field_number == 4) {
+            bool success;
+            (success, pos) = decode_4(pos, buf, instance);
             if (!success) {
                 return (false, pos);
             }
@@ -2968,6 +2983,31 @@ library FrameActionBodyCodec {
         }
 
         instance.cast_id = nestedInstance;
+
+        return (true, pos);
+    }
+
+    // FrameActionBody.input_text
+    function decode_4(uint64 pos, bytes memory buf, FrameActionBody memory instance) internal pure returns (bool, uint64) {
+        bool success;
+
+        uint64 len;
+        (success, pos, len) = ProtobufLib.decode_bytes(pos, buf);
+        if (!success) {
+            return (false, pos);
+        }
+
+        // Default value must be omitted
+        if (len == 0) {
+            return (false, pos);
+        }
+
+        instance.input_text = new bytes(len);
+        for (uint64 i = 0; i < len; i++) {
+            instance.input_text[i] = buf[pos + i];
+        }
+
+        pos = pos + len;
 
         return (true, pos);
     }

@@ -108,6 +108,53 @@ Keep in mind, that KeyRegistry contact has been migrated multiple times, so make
 
 Technically it's possible, but it's quite tricky. The best way to achieve this will be by using storage proofs for KeyRegistry storage verification.
 
+### How can I use it in frames?
+
+```typescipt
+import { NextRequest, NextResponse } from "next/server";
+import {
+  Factories,
+  FarcasterNetwork,
+  FrameActionBody,
+  getSSLHubRpcClient,
+  Message,
+  MessageData,
+  MessageType,
+  toFarcasterTime,
+  UserDataType,
+} from "@farcaster/hub-nodejs";
+
+export async function POST(req: NextRequest) {
+  const {
+    trustedData: { messageBytes },
+  } = await req.json();
+
+  const frameMessage = Message.decode(Buffer.from(messageBytes, "hex"));
+
+  const messageSignature = Buffer.from(message.signature).toString('hex');
+
+  const messageData: MessageData = {
+    type: message.data?.type as MessageType,
+    fid: message.data?.fid as number,
+    timestamp: message.data?.timestamp as number,
+    network: message.data?.network as FarcasterNetwork,
+    frameActionBody: message.data?.frameActionBody,
+  };
+
+  const messageEncoded = (MessageData.encode(messageData).finish());
+
+  const args = [
+    '0x' + Buffer.from(message.signer).toString('hex'), // public_key
+    '0x' + Buffer.from(messageSignature).slice(0, 32).toString('hex'), // signature_r
+    '0x' + Buffer.from(messageSignature).slice(32, 64).toString('hex'), // signature_s
+    '0x' + Buffer.from(messageEncoded).toString('hex') // message
+  ];
+
+  // Send your transaction here
+  // ...
+}
+```
+
 ## Running locally
 
 ```bash

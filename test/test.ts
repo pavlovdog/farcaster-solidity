@@ -117,5 +117,46 @@ describe('Test decodings', async () => {
           message_data.reactionBody?.targetCastId?.hash,
         );
     });
+
+    it('FrameActionBody', async () => {
+      const message_data: MessageData = {
+        type: MessageType.FRAME_ACTION,
+        fid,
+        timestamp,
+        network: FarcasterNetwork.MAINNET,
+        frameActionBody: {
+          url: Buffer.from('https://farcaster.network'),
+          buttonIndex: 0,
+          castId: {
+            fid,
+            hash
+          },
+          inputText: Buffer.from('GM')
+        }
+      };
+
+      const signature = await signFarcasterMessage(ed25519Signer, message_data);
+      const public_key = (await ed25519Signer.getSignerKey())._unsafeUnwrap();
+  
+      const message = (MessageData.encode(message_data).finish());
+  
+      const tx = test.verifyFrameActionBodyMessage(
+        public_key,
+        signature.r,
+        signature.s,
+        message
+      );
+
+      await expect(tx)
+        .to.emit(test, 'MessageFrameActionBodyVerified')
+        .withArgs(
+          message_data.fid,
+          message_data.frameActionBody?.buttonIndex,
+          message_data.frameActionBody?.castId?.fid,
+          message_data.frameActionBody?.castId?.hash,
+          message_data.frameActionBody?.url,
+          message_data.frameActionBody?.inputText
+        );
+    });
   });
 });

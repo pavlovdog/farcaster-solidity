@@ -37,7 +37,8 @@ contract Test {
     uint32 button_index,
     uint64 target_fid,
     bytes target_hash,
-    bytes url
+    bytes url,
+    bytes input_text
   );
 
   error InvalidSignature();
@@ -149,7 +150,8 @@ contract Test {
       message_data.frame_action_body.button_index,
       message_data.frame_action_body.cast_id.fid,
       message_data.frame_action_body.cast_id.hash_,
-      message_data.frame_action_body.url
+      message_data.frame_action_body.url,
+      message_data.frame_action_body.input_text
     );
   }
 }

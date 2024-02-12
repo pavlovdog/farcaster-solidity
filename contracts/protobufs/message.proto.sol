@@ -1543,11 +1543,6 @@ library CastAddBodyCodec {
             return (false, pos);
         }
 
-        // Empty packed array must be omitted
-        if (len == 0) {
-            return (false, pos);
-        }
-
         uint64 initial_pos = pos;
 
         // Sanity checks
@@ -1642,11 +1637,6 @@ library CastAddBodyCodec {
         uint64 len;
         (success, pos, len) = ProtobufLib.decode_length_delimited(pos, buf);
         if (!success) {
-            return (false, pos);
-        }
-
-        // Empty packed array must be omitted
-        if (len == 0) {
             return (false, pos);
         }
 

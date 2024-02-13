@@ -1377,10 +1377,7 @@ library CastAddBodyCodec {
                 return (false, pos, instance);
             }
 
-            // Check that the field number of monotonically increasing
-            if (field_number <= previous_field_number) {
-                return (false, pos, instance);
-            }
+            // Impossible to check the ascending order here since parent_url has a key = 7
 
             // Check that the wire type is correct
             success = check_key(field_number, wire_type);

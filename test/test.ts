@@ -121,6 +121,43 @@ describe('Test decodings', async () => {
         );
     });
 
+    it('CastAddBody with parentUrl', async () => {
+      const message_data: MessageData = {
+        type: MessageType.CAST_ADD,
+        fid,
+        timestamp,
+        network: FarcasterNetwork.MAINNET,
+        castAddBody: {
+          embedsDeprecated: [],
+          mentions: [1],
+          parentUrl: "url",
+          text: '@dwr.eth dau goes brrr',
+          mentionsPositions: [1],
+          embeds: [],
+        }
+      };
+  
+      const signature = await signFarcasterMessage(ed25519Signer, message_data);
+      const public_key = (await ed25519Signer.getSignerKey())._unsafeUnwrap();
+  
+      const message = (MessageData.encode(message_data).finish());
+  
+      const tx = test.verifyCastAddMessage(
+        public_key,
+        signature.r,
+        signature.s,
+        message
+      );
+
+      await expect(tx)
+        .to.emit(test, 'MessageCastAddVerified')
+        .withArgs(
+          message_data.fid,
+          message_data.castAddBody?.text,
+          message_data.castAddBody?.mentions
+        );
+    });
+
     it('ReactionBody', async () => {
       const message_data: MessageData = {
         type: MessageType.REACTION_ADD,

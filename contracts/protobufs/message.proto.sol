@@ -1377,7 +1377,7 @@ library CastAddBodyCodec {
                 return (false, pos, instance);
             }
 
-            // Impossible to check the ascending order here since parent_url has a key of 7
+            // Impossible to check the ascending order here since parent_url has a key = 7
 
             // Check that the wire type is correct
             success = check_key(field_number, wire_type);
